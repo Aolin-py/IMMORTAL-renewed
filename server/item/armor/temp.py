@@ -1,7 +1,7 @@
 from color import *
 import prettytable
 
-class armor:
+class CArmor:
     def __init__(self, name, defensive, cost, weight, description, special):
         self.name = name
         self.defensive = defensive
@@ -40,7 +40,7 @@ class armor:
         return self.defensive
 
 if __name__ == "__main__":
-    armor1 = armor(Y + "铠甲" + N, 10, 100, 10, "阿巴阿巴阿巴阿巴", "无")
+    armor1 = CArmor(Y + "铠甲" + N, 10, 100, 10, "阿巴阿巴阿巴阿巴", "无")
     print(armor1)
     damage = 20
     print("原伤害:", damage)

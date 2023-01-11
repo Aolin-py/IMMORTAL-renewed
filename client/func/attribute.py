@@ -10,7 +10,7 @@ def PrintAttribute(attribute, equipment, user, name):
         AttributeTable.add_row(
             [
                 R+"「气血」",
-                str(attribute["HP"]) + "/" + str(attribute["HP_MAX"]),
+                str(attribute["HP"]) + "/" + str(attribute["HP_MAX"]) + ' ' + str(round((int(attribute['HP'])/int(attribute['HP_MAX'])*100))) + '%',
                 B+"「头部」",
                 str(equipment["Head"]),
             ]
@@ -34,7 +34,7 @@ def PrintAttribute(attribute, equipment, user, name):
         AttributeTable.add_row(
             [
                 G+"「境界」",
-                str(attribute["LV"]),
+                str(attribute["LV"][0]),
                 B+"「脚部」",
                 str(equipment["Feet"]),
             ]
@@ -55,27 +55,30 @@ def PrintAttribute(attribute, equipment, user, name):
                 str(attribute["DF"])
             ]
         )
-        print(B,"≡", Y, "---------------------------------------------------", B, "≡", N)
+        print(B,"≡", Y, "------------------------信息栏------------------------", B, "≡", N)
         print(AttributeTable)
-        print(B,"≡", Y, "---------------------------------------------------", B, "≡", N)
+        print(B,"≡", Y, "------------------------------------------------------", B, "≡", N)
     except Exception as e:
         print(BR, "Error! %s" % e)
         print(N)
 
 if __name__ == "__main__":
     import time
-    equipment = {"Head": "黄巾", "Body": "黄金锁子甲", "Leg": "黄金护膝", "Feet": "军靴", "Hand": "倚天屠龙剑"}
+    # 此处仅供演示，不代表最终架构
+    # 此处仅供演示，不代表最终架构
+    equipment = {"Head": "头盔", "Body": "胸甲", "Leg": "护膝", "Feet": "靴子", "Hand": "剑"}
+    equipment_attribute = {'头盔' : 10, '胸甲' : 10, '护膝' : 10, '靴子' : 10, '剑' : 10}
     attribute = {
-        "HP": 100000,
+        "HP": 93408,
         "HP_MAX": 100000,
-        "AT": equipment["Hand"],
-        "DF": equipment["Head"]
-        + equipment["Body"]
-        + equipment["Leg"]
-        + equipment["Feet"],
+        "AT": equipment_attribute[equipment["Hand"]],
+        "DF": equipment_attribute[equipment["Head"]]
+        + equipment_attribute[equipment["Body"]]
+        + equipment_attribute[equipment["Leg"]]
+        + equipment_attribute[equipment["Feet"]],
         "POT": 1,
         "LV": ['宗师',100],
-        "EXP": 1,
+        "EXP": 154654,
         "EXP_MAX": 6465665463,
         "Coin": 1,
         # 以上为基本属性
@@ -86,4 +89,4 @@ if __name__ == "__main__":
     a = time.time()
     PrintAttribute(attribute, equipment, user, name)
     b = time.time()
-    print('用时：', b - a, '秒')
+    print('用时：', round(b - a, 5), '秒')

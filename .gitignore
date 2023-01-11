@@ -1,4 +1,9 @@
-__pycache__/🏢.cpython-39.pyc
-__pycache__/color.cpython-39.pyc
-func/__pycache__/color.cpython-39.pyc
-data/armor/__pycache__/color.cpython-39.pyc
+test
+test/cilent-1.py
+server/item/armor/__pycache__/__init__.cpython-39.pyc
+server/item/armor/__pycache__/temp.cpython-39.pyc
+client/func/__pycache__/color.cpython-39.pyc
+__pycache__
+server/config.ini
+client/config/config.ini
+client/config.ini
