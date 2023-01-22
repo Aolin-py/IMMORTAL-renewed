@@ -4,6 +4,8 @@ import socket
 import threading
 import configparser
 import os
+import time
+import atexit
 from colorama import init
 from pyfiglet import Figlet
 
@@ -11,7 +13,7 @@ init(autoreset=True)
 
 def getConfig(section,key=None):
     '''
-    获取[section]下[key]对应的值
+        获取[section]下[key]对应的值
     '''
     config = configparser.ConfigParser()
     dir = os.path.dirname(os.path.dirname(__file__))
@@ -24,8 +26,8 @@ def getConfig(section,key=None):
 
 def writeConfig(section,key=None,value=None):
     '''
-    将[section]下[key]的值定为[value]
-    若只填写section，则创建[section]
+        将[section]下[key]的值定为[value]
+        若只填写section，则创建[section]
     '''
     dir = os.path.dirname(os.path.dirname(__file__))
     os.chdir(dir + "\\client")
@@ -39,15 +41,15 @@ def writeConfig(section,key=None,value=None):
         f.close()
 
 
-def recv(sock, addr):
+def recv(sock=socket.socket, addr=tuple):
     '''
-    一个UDP连接在接收消息前必须要让系统知道所占端口
-    也就是需要send一次，否则win下会报错
+        一个UDP连接在接收消息前必须要让系统知道所占端口
+        也就是需要send一次，否则win下会报错
     '''
     sock.sendto(name.encode('utf-8'), addr) # 初始化连接发送名字
     print('已连接至服务器[%s:%s]' % (IP, port))
     while True:
-        data = sock.recv(1024)
+        data = sock.recv(4096)
         message = data.decode('utf-8')
         if message == "001": #登录
             print("请输入{Y}密码{N}：".format(Y=Y, N=N))
@@ -65,6 +67,17 @@ def recv(sock, addr):
         elif message == "005": #注册成功
             print("{Y}注册成功，已自动登录{N}".format(Y=Y, N=N))
             continue
+        elif message == "006": #创建角色
+            print("该账户没用创建角色，请新建角色进入游戏")
+            print("请输入{Y}角色名（必须为中文）：{N}".format(Y=Y, N=N))
+            continue
+        elif message == "007": #创建成功
+            print("{Y}创建成功，已自动进入游戏{N}".format(Y=Y, N=N))
+            continue
+        elif "008" in message: #进入游戏
+            text = message.replace("008",'')
+            print("欢迎回来，{Y}{Text}{N}".format(Y=Y, N=N,Text=text))
+            continue
         elif message == '101': #登录-密码错误
             print("{R}{BW}密码错误{N}".format(BW=BW,R=R,N=N))
             print("请重新输入{Y}密码{N}：".format(Y=Y,N=N))
@@ -73,14 +86,25 @@ def recv(sock, addr):
             print("{R}前后密码不一致{N}".format(R=R,N=N))
             print("请重新输入{Y}密码{N}：".format(Y=Y,N=N))
             continue
+        elif message == "103": #登录-重复登陆
+            print("{R}{BW}该账号已在另一客户端登录，三秒后自动退出{N}".format(R=R,N=N,BW=BW))
+            time.sleep(3)
+            exit()
+        elif message == "104": #角色
+            print("{R}{BW}角色名必须为中文{N}，请重新输入".format(R=R,N=N,BW=BW))
+            continue
         elif "##" in message: #他人说的话
-            text = message.split("##",1) # 注：此处分割完成后列表为[名称,"",内容]，中间有空项
+            text = message.split("##",1) # 注：此处分割完成后列表为[名称,内容]，中间有空项
                                         # 只分割一次，所以对后面内容无影响
             # print(text)
-            print("{Y}<{Name}>{N}{Text}".format(Y=Y,N=N,Name=text[0],Text=text[2]))
-        elif message[0:1] == "$Q":
+            print("{Y}<{Name}>{N}{Text}".format(Y=Y,N=N,Name=text[0],Text=text[1]))
+            continue
+        elif message[0:2] == "$Q":
             Name = message.replace("$Q","",1)
             print("{Y}<{Name}>退出了游戏{N}".format(Y=Y,Name=Name, N=N))
+        elif message[0:2] == "$L":
+            Name = message.replace("$L","",1)
+            print("{Y}<{Name}>加入了游戏{N}".format(Y=Y,Name=Name, N=N))
         else:
             print(message)
 
@@ -93,12 +117,13 @@ def send(sock, addr):
             server：传递的服务器IP和端口
     '''
     while True:
-        string = input('')
+        string = input('>')
         message = string
         data = message.encode('utf-8')
         sock.sendto(data, addr)
         if string.lower() == 'EXIT'.lower():
             break
+
 
 def main(IP, port):
     '''
@@ -106,9 +131,10 @@ def main(IP, port):
     '''
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     server = (IP, port)
-    tr = threading.Thread(target=recv, args=(s, server), daemon=True)
-    ts = threading.Thread(target=send, args=(s, server))
+    tr = threading.Thread(target=recv, args=(s, server), daemon=True, name='Recv&Output')
+    ts = threading.Thread(target=send, args=(s, server), name='Send')
     tr.start()
+    time.sleep(0.5)
     ts.start()
     ts.join()
     s.close()
