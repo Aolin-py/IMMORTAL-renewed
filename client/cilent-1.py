@@ -5,9 +5,8 @@ import threading
 import configparser
 import os
 import time
-import atexit
 from colorama import init
-from pyfiglet import Figlet
+#import pyfiglet
 
 init(autoreset=True)
 
@@ -74,10 +73,17 @@ def recv(sock=socket.socket, addr=tuple):
         elif message == "007": #创建成功
             print("{Y}创建成功，已自动进入游戏{N}".format(Y=Y, N=N))
             continue
-        elif "008" in message: #进入游戏
-            text = message.replace("008",'')
-            print("欢迎回来，{Y}{Text}{N}".format(Y=Y, N=N,Text=text))
+        elif "008" in message: #进入游戏 message="008[1,2,3];["xxx","xxx","xxx"]"
+            text = message.replace("008",'') #text="[1,2,3];["xxx","xxx","xxx"]
+            text = text.split(";")   #text = ["[1,2,3]","["xxx","xxx","xxx"]"]
+            characterID = eval(text[0])
+            characterName = eval(text[1])
+            print("输入序号以选择角色, 输入new新建角色")
+            for i in range(0, len(characterID)):
+                print("[{ID}]   {Name}".format(ID=characterID[i], Name=characterName[i]))
             continue
+        elif "009" in message: #
+            print("欢迎回来, {Name}".format(Name=message.replace("009","")))
         elif message == '101': #登录-密码错误
             print("{R}{BW}密码错误{N}".format(BW=BW,R=R,N=N))
             print("请重新输入{Y}密码{N}：".format(Y=Y,N=N))
@@ -94,9 +100,7 @@ def recv(sock=socket.socket, addr=tuple):
             print("{R}{BW}角色名必须为中文{N}，请重新输入".format(R=R,N=N,BW=BW))
             continue
         elif "##" in message: #他人说的话
-            text = message.split("##",1) # 注：此处分割完成后列表为[名称,内容]，中间有空项
-                                        # 只分割一次，所以对后面内容无影响
-            # print(text)
+            text = message.split("##",1) # 注：此处分割完成后列表为[名称,内容]
             print("{Y}<{Name}>{N}{Text}".format(Y=Y,N=N,Name=text[0],Text=text[1]))
             continue
         elif message[0:2] == "$Q":
@@ -105,6 +109,8 @@ def recv(sock=socket.socket, addr=tuple):
         elif message[0:2] == "$L":
             Name = message.replace("$L","",1)
             print("{Y}<{Name}>加入了游戏{N}".format(Y=Y,Name=Name, N=N))
+        elif message == "exit":
+            exit()
         else:
             print(message)
 
@@ -117,12 +123,10 @@ def send(sock, addr):
             server：传递的服务器IP和端口
     '''
     while True:
-        string = input('>')
+        string = input('')
         message = string
         data = message.encode('utf-8')
         sock.sendto(data, addr)
-        if string.lower() == 'EXIT'.lower():
-            break
 
 
 def main(IP, port):
@@ -131,8 +135,8 @@ def main(IP, port):
     '''
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     server = (IP, port)
-    tr = threading.Thread(target=recv, args=(s, server), daemon=True, name='Recv&Output')
-    ts = threading.Thread(target=send, args=(s, server), name='Send')
+    tr = threading.Thread(target=recv, args=(s, server), name='Recv&Output')
+    ts = threading.Thread(target=send, args=(s, server), name='Send', daemon=True)
     tr.start()
     time.sleep(0.5)
     ts.start()
@@ -140,8 +144,8 @@ def main(IP, port):
     s.close()
 
 if __name__ == '__main__':
-    logo = Figlet(font="lean", width=2000)
-    print(Y + logo.renderText("Immortal") + N)
+    #logo = pyfiglet.Figlet(font="lean", width=2000)
+    #print(Y + logo.renderText("Immortal") + N)
     while True:
         try:
             print(Y + "欢迎来到IMMORTAL！" + N)
@@ -154,7 +158,7 @@ if __name__ == '__main__':
                 a = input("是否保存IP？{Y}是(Y)/否(N){N}".format(Y=Y, N=N))
                 if a == "Y":
                     writeConfig("Internet",["IP","Port"],[IP,str(port)])
-            print("====欢迎来到IMMORAL,退出请输入'EXIT(不分大小写)'====")
+            print("退出请输入'EXIT(不分大小写)'")
             name = input('请输入你的名称:')
             main(IP, port)
             break
